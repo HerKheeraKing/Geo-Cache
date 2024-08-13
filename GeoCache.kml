@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<kml xmlns='http://www.opengis.net/kml/2.2'>
+	<Document>
+		<name>COA GeoCache Project Team X</name>
+		<Folder>
+			<Placemark>
+				<styleUrl>#line-1267FF-5</styleUrl>
+				<LineString>
+					<coordinates>
+					<!-- delete this line and insert SD data here -->
+					</coordinates>
+				</LineString>
+			</Placemark>
+		</Folder>
+		<Style id='line-1267FF-5'>
+			<LineStyle>
+				<color>ffFF6712</color>
+				<width>5</width>
+			</LineStyle>
+		</Style>
+	</Document>
+</kml>
