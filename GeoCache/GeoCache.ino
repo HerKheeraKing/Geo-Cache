@@ -552,6 +552,20 @@ void loop(void)
 		Serial.println(cstr);	
      
 		// TODO - Check button for incrementing target index 0..3
+    uint8_t index = 0;
+    
+    // If pressed 
+    if (digitalRead(5) == HIGH)
+    {
+      // increment target index
+      index++;
+      
+      // If larger than 3, reset to 0
+      if(index > 3)
+      {
+        index = 0;
+      }
+    }
 
 		// TODO - Parse 5 parameters latitude, longitude, and hemisphere indicators, and course over ground from GPS message
     // Example: I will need 8 parameters for geocache
