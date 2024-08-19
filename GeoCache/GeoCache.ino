@@ -591,30 +591,28 @@ void loop(void)
     
     
     // TODO - Call degMin2DecDeg() convert latitude deg/min to dec/deg
-    degMin2DecDeg(P4, P3);
+    float latitude = degMin2DecDeg(P4, P3);
 		
 		// TODO - Call degMin2DecDeg() convert longitude deg/min to dec/deg
-    degMin2DecDeg(P6, P5);
+    float longitude = degMin2DecDeg(P6, P5);
 
 		// TODO - Call calcDistance() calculate distance to target
-    // Off by .04???
-    float latitude = degMin2DecDeg(P4, P3);
-    float longitude = degMin2DecDeg(P6, P5);
     calcDistance(latitude, longitude, GEOLAT0, GEOLON0);
    
 		// TODO - Call calcBearing() calculate bearing to target
-    // Off by .10???
     float bearingg = calcBearing(latitude, longitude, GEOLAT0, GEOLON0);
 		
 		// TODO - Calculate relative bearing within range >= 0 and < 360
-    // Off by .15???
     float ground = atof(P8);
     float frel = (bearingg - ground);
 
+    // Wrap around
+    // If negative bearing is less than zero, then adding 360 will put it back into the 0 to 359 range
     if(frel < 0)
     {
       frel += 360;
     }
+    // If bearing that is equal to or greater than 360 (>=360), then subtracting 360 will put it back into the 0 to 359 range
     else if(frel >= 360)
     {
       frel -= 360;
@@ -636,4 +634,16 @@ void loop(void)
 	}
 
   // TODO - toggle LED_BUILTIN once a second.
+
+  // Intialize  toggle led millis
+  unsigned long ledToggle = 0;
+
+  if(millis() - ledToggle >= 1000)
+  {
+    // Update 
+    ledToggle = millis();
+
+    // Turn on / off
+   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); 
+  }
 }
