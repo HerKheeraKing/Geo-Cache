@@ -611,14 +611,14 @@ void loop(void)
     float longitude = degMin2DecDeg(P6, P5);
 
 		// TODO - Call calcDistance() calculate distance to target
-    calcDistance(latitude, longitude, GEOLAT0, GEOLON0);
+    fdis = calcDistance(latitude, longitude, GEOLAT0, GEOLON0);
    
 		// TODO - Call calcBearing() calculate bearing to target
     float bearingg = calcBearing(latitude, longitude, GEOLAT0, GEOLON0);
 		
 		// TODO - Calculate relative bearing within range >= 0 and < 360
-    float ground = atof(P8);
-    float frel = (bearingg - ground);
+    float fcog = atof(P8);
+    float frel = (bearingg - fcog);
 
     // Wrap around
     // If negative bearing is less than zero, then adding 360 will put it back into the 0 to 359 range
@@ -638,14 +638,28 @@ void loop(void)
   #endif
 		
 		// TODO write required data to SecureDigital then execute flush()
+
+    // Create or open
+    File MyFile = SD.open("MyFile.txt", FILE_WRITE);
+
+    if(MyFile)
+    {
+      MyFile.print(target, 6);
+      MyFile.flush();
+      MyFile.print(frel, 6);
+      MyFile.flush();
+      MyFile.print(fdis, 6);
+      MyFile.flush();
+      MyFile.print(getBatteryVoltage(), 6);
+      MyFile.flush();
+    }
+    else
+    {
+      Serial.println("Error creating myfile");
+    }
 		
-		/* TODO - Display
-        Target Number
-        Relative Bearing to Target
-        Distance to Target
-        Battery Voltage
-    */
 	}
+  // Notes: https://docs.arduino.cc/learn/programming/sd-guide/
 
   // TODO - toggle LED_BUILTIN once a second.
 
