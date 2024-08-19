@@ -157,7 +157,7 @@ float flat = 0.0;		// current GPS latitude position
 float flon = 0.0;		// current GPS longitude position
 float fcog = 0.0;		// current course over ground
 float fbrg = 0.0;		// true north target bearing
-float frel = 0.0;		// relative bearing to target
+float bearring = 0.0;		// relative bearing to target
 float fdis = 0.0;		// current distance to target
 unsigned long ledToggle = 0;   // Intialize  toggle led millis
 
@@ -172,7 +172,7 @@ WAYPOINT waypoint[] =
 	GEOLAT3, GEOLON3,
 };
 
-File logFile;
+File MyMap;
 Adafruit_seesaw joy;
 Adafruit_SH1107 oled = Adafruit_SH1107(64, 128, &Wire);
 Uart gps (&sercom1, M0RX_PIN, M0TX_PIN, SERCOM_RX_PAD_0, UART_TX_PAD_2);
@@ -508,7 +508,7 @@ void setup(void)
 	oled.setRotation(1);
 	oled.setTextColor(SH110X_WHITE);
 	oled.setCursor(0, 0);
-	oled.println("Hello Kheera");
+	oled.println("Hello Kheera <3");
 	oled.display();
 
 	// initialize joy board
@@ -523,20 +523,25 @@ void setup(void)
 	joy.setGPIOInterrupts(BUT_MSK, true);
   pinMode(5, INPUT_PULLUP);
 
-	// TODO - initialize Secure Digital Card and open "MyMap.txt" file for writing
-  if(!SD.begin(4))
+	// // TODO - initialize Secure Digital Card and open "MyMap.txt" file for writing
+  // if (SD.begin(SDC_CS)) MyMap = SD.open("MyMap.txt", FILE_WRITE);
+  // if (MyMap) Serial.println("MyMap() success");
+  // else Serial.println("MyMap() fail");
+
+  // TODO - initialize Secure Digital Card and open "MyMap.txt" file for writing
+  if (SD.begin(4))
   {
-    Serial.println("initialization failed!");
-    return;
+    MyMap = SD.open("MyMap.txt", FILE_WRITE);
+    Serial.println("MyMap() txt file created success");
+  } 
+   else
+  {
+    Serial.println("MyMap() txt file created fail");
   }
-    Serial.println("initialization done.");
+ 
 
-    // Open file for writing
-    File MapFile = SD.open("MyMap.txt", FILE_WRITE);
 
-    // TODO: do i need to close this file?
-
-  
+  // Notes: https://docs.arduino.cc/learn/programming/sd-guide/
 
 #if GPS_ON
 	// initilaze gps serial baud rate
@@ -569,19 +574,42 @@ void loop(void)
 		Serial.println(cstr);	
      
 		// TODO - Check button for incrementing target index 0..3
-    
-    // If pressed 
-    if (digitalRead(5) == HIGH)
+    uint32_t buttons = 0;
+    static uint32_t _buttons = joy.digitalReadBulk(BUT_MSK);
+    bool pressedButton = false; 
+
+    // Read current state
+    buttons = joy.digitalReadBulk(BUT_MSK);
+
+    // check if state changed 
+    if (_buttons != buttons)
     {
-      // increment target index
-      target++;
-      
-      // If larger than 3, reset to 0
-      if(target > 3)
+      // Is button currently pressed?
+      if(!(buttons & BUT_RT && pressedButton == false))
       {
-        target = 0;
+        Serial.println("Button Pressed!");
+
+        // increment target index
+        target++;
+        
+        // If larger than 3, reset to 0
+        if(target > 3)
+        {
+          target = 0;
+        }
+
+        // Pressed 
+        pressedButton = true; 
       }
     }
+    else
+    {
+      pressedButton = false; 
+    }
+
+    // Update 
+    _buttons = buttons;
+   
 
 		// TODO - Parse 5 parameters latitude, longitude, and hemisphere indicators, and course over ground from GPS message
     // Example: I will need 8 parameters for geocache
@@ -653,39 +681,23 @@ void loop(void)
     Serial.println(frel);
   #endif
 		
-		// TODO write required data to SecureDigital then execute flush()
-
-    // Create or open
-    File MyFile = SD.open("MyFile.txt", FILE_WRITE);
-
-    if(MyFile)
+		//TODO write required data to SecureDigital then execute flush()
+    if(MyMap)
     {
       // TODO: You must write a line once a second to the SD card containing the 
       // received GPS coordinates and calculated target distance in feet using the 
       // following format: "longitude,latitude,bearing.distance”.  ???
-      MyFile.print(target, 6);
-      MyFile.print(",");
-      MyFile.print(latitude, 6);
-      MyFile.print(",");
-      MyFile.print(longitude, 6);
-      MyFile.print(",");
-
-      MyFile.print(frel, 6);
-      MyFile.print(",");
-      MyFile.print(fdis, 6);
-      MyFile.print(",");
-      MyFile.print(getBatteryVoltage(), 6);
-      MyFile.println();
+      MyMap.print(longitude, 6);
+      MyMap.print(",");
+      MyMap.print(latitude, 6);
+      MyMap.print(",");
+      MyMap.print(frel, 0);
+      MyMap.print(".");
+      MyMap.print(fdis, 0);
+      MyMap.println();
 
       // Data written to file 
-      MyFile.flush();
-
-      // TODO: Do i need this here or am i not closing thje file in my program?
-      MyFile.close();      
-    }
-    else
-    {
-      Serial.println("Error creating myfile");
+      MyMap.flush(); 
     }
     
       // wait one second 
@@ -693,6 +705,22 @@ void loop(void)
 		
 	}
   // Notes: https://docs.arduino.cc/learn/programming/sd-guide/
+
+  // Writing to OLED - target, distance, bearing, battery 
+  oled.clearDisplay();
+  oled.setTextSize(1);
+  oled.setRotation(1);
+	oled.setTextColor(SH110X_WHITE);
+	oled.setCursor(0, 0);
+  oled.print("Target: ");
+  oled.println(target);
+  oled.print("Distance: ");
+  oled.println(fdis);
+  oled.print("Bearing: "); 
+  oled.println(bearring);
+  oled.print("Battery: ");
+  oled.println(getBatteryVoltage());
+  oled.display();
 
   // TODO - toggle LED_BUILTIN once a second.
   if(millis() - ledToggle >= 1000)
