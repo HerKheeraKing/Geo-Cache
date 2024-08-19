@@ -523,11 +523,6 @@ void setup(void)
 	joy.setGPIOInterrupts(BUT_MSK, true);
   pinMode(5, INPUT_PULLUP);
 
-	// // TODO - initialize Secure Digital Card and open "MyMap.txt" file for writing
-  // if (SD.begin(SDC_CS)) MyMap = SD.open("MyMap.txt", FILE_WRITE);
-  // if (MyMap) Serial.println("MyMap() success");
-  // else Serial.println("MyMap() fail");
-
   // TODO - initialize Secure Digital Card and open "MyMap.txt" file for writing
   if (SD.begin(4))
   {
