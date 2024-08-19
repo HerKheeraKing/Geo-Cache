@@ -116,6 +116,8 @@ Results for adjusting for relative bearing towards tree = 217.519650 degrees
 #define PMTK_SET_NMEA_OUTPUT_RMCGGA "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28"
 #define PMTK_SET_NMEA_OUTPUT_OFF "$PMTK314,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28"
 
+#define EARTH_RADIUS_FEET (3959.00 * 5280) // feet per mile
+
 /****
 Sample coordinates that can be used for testing.
 ****/
@@ -241,10 +243,25 @@ Return:
 float calcDistance(float flat1, float flon1, float flat2, float flon2)
 {
 	float distance = 0.0;
-	
-	/*
-		TODO calculated distance to target
-	*/
+
+  // Convert the degrees to RADIANS 
+  float latFirstPoint = radians(flat1);
+  float latSecondPoint = radians(flat2);
+  float lonFirstPoint = radians(flon1);
+  float lonSecondPoint = radians(flon2);
+
+  // Difference between 2 points 
+  float diffLat = (latSecondPoint - latFirstPoint);
+  float diffLon = (lonSecondPoint - lonFirstPoint);
+
+  // Haversine formula 
+  float a = sin(diffLat / 2) * sin(diffLat / 2) +
+            cos(latFirstPoint) * cos(latSecondPoint) * sin(diffLon / 2) * sin(diffLon / 2);
+
+  float c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+  // Converting distance to feet 
+  distance = EARTH_RADIUS_FEET * c;
 	
 #if LOG_ON
 	Serial.print("calcDistance() returned: ");
@@ -253,6 +270,11 @@ float calcDistance(float flat1, float flon1, float flat2, float flon2)
 
 	return(distance);
 }
+
+// Notes: http://www.movable-type.co.uk/scripts/latlong.html
+// Notes: https://stackoverflow.com/questions/14920675/is-there-a-function-in-c-language-to-calculate-degrees-radians
+// Notes Geek: https://www.geeksforgeeks.org/haversine-formula-to-find-distance-between-two-points-on-a-sphere/
+// Notes vid: https://www.youtube.com/watch?v=nsVsdHeTXIE
 
 /******************************************************************************
 Calculate Great Circle Bearing between two coordinates
@@ -288,9 +310,25 @@ float calcBearing(float flat1, float flon1, float flat2, float flon2)
 {
 	float bearing = 0.0;
 	
-	/*
-		TODO calculate bearing to target
-	*/
+ // Convert the degrees to RADIANS 
+  float latFirstPoint = radians(flat1);
+  float latSecondPoint = radians(flat2);
+  float lonFirstPoint = radians(flon1);
+  float lonSecondPoint = radians(flon2);
+
+  // Difference between 2 points in longitude
+  float diffLon = (lonSecondPoint - lonFirstPoint);
+
+  // Calc bearing formula 
+  float y = sin(diffLon) * cos(latSecondPoint);
+  float x = cos(latFirstPoint) * sin(latSecondPoint) - sin(latFirstPoint) * cos(latSecondPoint) * cos(diffLon);
+
+  float radiansBearing = atan2(y, x);
+
+  // Converting calculation to degrees 
+  bearing = degrees(radiansBearing);
+
+
 #if LOG_ON
 	Serial.print("calcBearing() returned: ");
 	Serial.println(bearing, 6);
@@ -298,6 +336,8 @@ float calcBearing(float flat1, float flon1, float flat2, float flon2)
 
 	return(bearing);
 }
+
+// Notes: http://www.movable-type.co.uk/scripts/latlong.html
 
 #if GPS_ON
 /*
@@ -549,11 +589,6 @@ void loop(void)
     Serial.print("Course over ground: ");
     Serial.println(P8);
     
-    //Results of executing the following functions:
- 
-    //calcDistance() to GEOLAT0/GEOLON0 target = 45335760 feet
-    //calcBearing() to GEOLAT0/GEOLON0 target = 22.999652 degrees
-    // Results for adjusting for relative bearing towards tree = 217.519650 degrees
     
     // TODO - Call degMin2DecDeg() convert latitude deg/min to dec/deg
     degMin2DecDeg(P4, P3);
@@ -562,10 +597,28 @@ void loop(void)
     degMin2DecDeg(P6, P5);
 
 		// TODO - Call calcDistance() calculate distance to target
-			
+    // Off by .04???
+    float latitude = degMin2DecDeg(P4, P3);
+    float longitude = degMin2DecDeg(P6, P5);
+    calcDistance(latitude, longitude, GEOLAT0, GEOLON0);
+   
 		// TODO - Call calcBearing() calculate bearing to target
+    // Off by .10???
+    float bearingg = calcBearing(latitude, longitude, GEOLAT0, GEOLON0);
 		
 		// TODO - Calculate relative bearing within range >= 0 and < 360
+    // Off by .15???
+    float ground = atof(P8);
+    float frel = (bearingg - ground);
+
+    if(frel < 0)
+    {
+      frel += 360;
+    }
+    else if(frel >= 360)
+    {
+      frel -= 360;
+    }
 		
   #if LOG_ON 
 		Serial.print("Relative Bearing: ");
