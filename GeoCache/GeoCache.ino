@@ -159,6 +159,7 @@ float fcog = 0.0;		// current course over ground
 float fbrg = 0.0;		// true north target bearing
 float frel = 0.0;		// relative bearing to target
 float fdis = 0.0;		// current distance to target
+unsigned long ledToggle = 0;   // Intialize  toggle led millis
 
 /************************/
 /**** GLOBAL OBJECTS ****/
@@ -486,6 +487,9 @@ void setup(void)
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, LOW);
 
+  // Store current time for led toggle 
+  ledToggle = millis();
+
 	// initialize oled dispaly
 	while (oled.begin(0x3C, true) == false)
 	{
@@ -520,6 +524,19 @@ void setup(void)
   pinMode(5, INPUT_PULLUP);
 
 	// TODO - initialize Secure Digital Card and open "MyMap.txt" file for writing
+  if(!SD.begin(4))
+  {
+    Serial.println("initialization failed!");
+    return;
+  }
+    Serial.println("initialization done.");
+
+    // Open file for writing
+    File MapFile = SD.open("MyMap.txt", FILE_WRITE);
+
+    // TODO: do i need to close this file?
+
+  
 
 #if GPS_ON
 	// initilaze gps serial baud rate
@@ -552,18 +569,17 @@ void loop(void)
 		Serial.println(cstr);	
      
 		// TODO - Check button for incrementing target index 0..3
-    uint8_t index = 0;
     
     // If pressed 
     if (digitalRead(5) == HIGH)
     {
       // increment target index
-      index++;
+      target++;
       
       // If larger than 3, reset to 0
-      if(index > 3)
+      if(target > 3)
       {
-        index = 0;
+        target = 0;
       }
     }
 
@@ -644,28 +660,41 @@ void loop(void)
 
     if(MyFile)
     {
+      // TODO: You must write a line once a second to the SD card containing the 
+      // received GPS coordinates and calculated target distance in feet using the 
+      // following format: "longitude,latitude,bearing.distance”.  ???
       MyFile.print(target, 6);
-      MyFile.flush();
+      MyFile.print(",");
+      MyFile.print(latitude, 6);
+      MyFile.print(",");
+      MyFile.print(longitude, 6);
+      MyFile.print(",");
+
       MyFile.print(frel, 6);
-      MyFile.flush();
+      MyFile.print(",");
       MyFile.print(fdis, 6);
-      MyFile.flush();
+      MyFile.print(",");
       MyFile.print(getBatteryVoltage(), 6);
+      MyFile.println();
+
+      // Data written to file 
       MyFile.flush();
+
+      // TODO: Do i need this here or am i not closing thje file in my program?
+      MyFile.close();      
     }
     else
     {
       Serial.println("Error creating myfile");
     }
+    
+      // wait one second 
+      delay(1000);
 		
 	}
   // Notes: https://docs.arduino.cc/learn/programming/sd-guide/
 
   // TODO - toggle LED_BUILTIN once a second.
-
-  // Intialize  toggle led millis
-  unsigned long ledToggle = 0;
-
   if(millis() - ledToggle >= 1000)
   {
     // Update 
