@@ -71,7 +71,7 @@ Results for adjusting for relative bearing towards tree = 217.519650 degrees
 #include <Adafruit_SH110X.h>
 
 // compile flags
-#define GPS_ON 0		// GPS messages classroom testing=0, live outside=1
+#define GPS_ON  1	// GPS messages classroom testing=0, live outside=1
 #define LOG_ON 1
 
 // Feather PINS for peripherals
@@ -622,14 +622,16 @@ void loop(void)
     char *P3 = strtok(NULL, ", ");
     Serial.print("Latitude: "); 
     Serial.println(P3);
+    
 
     char *P4 = strtok(NULL, ", ");
     Serial.print("N/S Indicator: ");
-    Serial.println(P4);
+    
     
     char *P5 = strtok(NULL, ", ");
     Serial.print("Longitude: ");
     Serial.println(P5); 
+    flon = atof(P5);
 
     char *P6 = strtok(NULL, ", ");
     Serial.print("E/W Indicator: ");
@@ -642,6 +644,7 @@ void loop(void)
     Serial.print("Course over ground: ");
     Serial.println(P8);
     
+
     
     // TODO - Call degMin2DecDeg() convert latitude deg/min to dec/deg
     float latitude = degMin2DecDeg(P4, P3);
@@ -650,10 +653,10 @@ void loop(void)
     float longitude = degMin2DecDeg(P6, P5);
 
 		// TODO - Call calcDistance() calculate distance to target
-    fdis = calcDistance(latitude, longitude, GEOLAT0, GEOLON0);
+    fdis = calcDistance(latitude, longitude, waypoint[target].latitude, waypoint[target].longitude);
    
 		// TODO - Call calcBearing() calculate bearing to target
-    float bearingg = calcBearing(latitude, longitude, GEOLAT0, GEOLON0);
+    float bearingg = calcBearing(latitude, longitude, waypoint[target].latitude, waypoint[target].longitude);
 		
 		// TODO - Calculate relative bearing within range >= 0 and < 360
     float fcog = atof(P8);
