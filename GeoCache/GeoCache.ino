@@ -330,6 +330,7 @@ float calcBearing(float flat1, float flon1, float flat2, float flon2)
   bearing = degrees(radiansBearing);
 
 
+
 #if LOG_ON
 	Serial.print("calcBearing() returned: ");
 	Serial.println(bearing, 6);
@@ -664,15 +665,35 @@ void loop(void)
 
     // Wrap around
     // If negative bearing is less than zero, then adding 360 will put it back into the 0 to 359 range
-    if(frel < 0)
+    while(frel < 0)
     {
       frel += 360;
+      Serial.print("TEST: ");
+      Serial.println(frel);
     }
     // If bearing that is equal to or greater than 360 (>=360), then subtracting 360 will put it back into the 0 to 359 range
-    else if(frel >= 360)
+    while(frel >= 360)
     {
       frel -= 360;
+      Serial.print("TEST: ");
+      Serial.println(frel);
     }
+
+    // Writing to OLED - target, distance, bearing, battery 
+    oled.clearDisplay();
+    oled.setTextSize(1);
+    oled.setRotation(1);
+    oled.setTextColor(SH110X_WHITE);
+    oled.setCursor(0, 0);
+    oled.print("Target: ");
+    oled.println(target);
+    oled.print("Distance: ");
+    oled.println(fdis);
+    oled.print("Bearing: "); 
+    oled.println(frel);
+    oled.print("Battery: ");
+    oled.println(getBatteryVoltage());
+    oled.display();
 		
   #if LOG_ON 
 		Serial.print("Relative Bearing: ");
@@ -703,22 +724,6 @@ void loop(void)
 		
 	}
   // Notes: https://docs.arduino.cc/learn/programming/sd-guide/
-
-  // Writing to OLED - target, distance, bearing, battery 
-  oled.clearDisplay();
-  oled.setTextSize(1);
-  oled.setRotation(1);
-	oled.setTextColor(SH110X_WHITE);
-	oled.setCursor(0, 0);
-  oled.print("Target: ");
-  oled.println(target);
-  oled.print("Distance: ");
-  oled.println(fdis);
-  oled.print("Bearing: "); 
-  oled.println(bearring);
-  oled.print("Battery: ");
-  oled.println(getBatteryVoltage());
-  oled.display();
 
   // TODO - toggle LED_BUILTIN once a second.
   if(millis() - ledToggle >= 1000)
