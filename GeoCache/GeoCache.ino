@@ -123,20 +123,20 @@ Sample coordinates that can be used for testing.
 ****/
 
 // FS3B-116 large tree outside front door
-#define GEOLAT0 28.594532
-#define GEOLON0 -81.304437
+#define GEOLAT0 28.59627
+#define GEOLON0 -81.30653
 
 // grass between taco bell and office
-#define GEOLAT1 28.596556
-#define GEOLON1 -81.306430
+#define GEOLAT1 28.59657
+#define GEOLON1 -81.30311
 
 // FS2 rear parking retention pond
-#define GEOLAT2 28.595888
-#define GEOLON2 -81.301271
+#define GEOLAT2 28.5912
+#define GEOLON2 -81.30601
 
 // Front FS4 436 entrance
-#define GEOLAT3 28.591209
-#define GEOLON3 -81.306019
+#define GEOLAT3 28.59505
+#define GEOLON3 -81.30677
 
 // waypoint structure
 typedef struct
